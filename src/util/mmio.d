@@ -15,7 +15,7 @@ enum Level : ubyte
  *                         Field!("Pin1", 1, Level, Toggle.allow));
  */
 
-@attribute("noinit") struct PORTBRegister(T)
+@attribute("noinit") struct PORTRegister(T)
 {
     private T _store = void;
 
@@ -234,12 +234,8 @@ enum Level : ubyte
     enum maskPin7 = 0b1;
 }
 
-@attribute("nocode") PORTBRegister!(T)* portbRegister(T)(void* addr)
-{
-    return cast(PORTBRegister!(T)*)addr;
-}
+pragma(address, 0x25) extern __gshared PORTRegister!ubyte PORTB;
 
-enum PORTB = portbRegister!ubyte(cast(void*)0x25);
 
 enum Direction : ubyte
 {
@@ -247,7 +243,7 @@ enum Direction : ubyte
 	out_
 }
 
-@attribute("noinit") struct DDRBRegister(T)
+@attribute("noinit") struct DDRRegister(T)
 {
     private T _store = void;
 
@@ -260,6 +256,12 @@ enum Direction : ubyte
     {
         __builtin_volatile_store(&_store, cast(T)value);
     }
+
+
+    @attribute("inlineonly") void opAssign()(const T value)
+    {
+        __builtin_volatile_store(&_store, cast(T)value);
+    }    
 
     /**
      * FIXME: Make this much more intelligent
@@ -467,31 +469,4 @@ enum Direction : ubyte
     enum maskPin7 = 0b1;
 }
 
-@attribute("nocode") DDRBRegister!(T)* ddrbRegister(T)(void* addr)
-{
-    return cast(DDRBRegister!(T)*)addr;
-}
-
-enum DDRB = ddrbRegister!ubyte(cast(void*)0x24);
-
-
-/+
-    PortB.pin0 = Level.low;
-    if(PortB.pin1 == Level.high)
-    {
-        PortB.pin2 = Level.high;
-    }
-
-    //PortB.set("pin1", Level.low,
-    //          "pin2", Level.high,
-    //          "pin3", Level.low);
-    //PortB |= 0b1001011;
-    PortB.opOpAssign!"|"(0b1001011);
-    //PortB |= (1 << PortB.shiftPin1 | 1 << PortB.shiftPin2);
-    PortB.opOpAssign!"|"(1 << PortB.shiftPin1 | 1 << PortB.shiftPin2);
-
-    auto val = PortB.load();
-    //val.pin1 = Level.low;
-    val |= 0b1;
-    PortB.store(val);
-+/
+pragma(address, 0x24) extern __gshared DDRRegister!ubyte DDRB;
